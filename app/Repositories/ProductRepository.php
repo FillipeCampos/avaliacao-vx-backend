@@ -30,11 +30,15 @@ class ProductRepository
         ]);
     }
 
-    public function storeProducts(Request $request): JsonResponse
+    public function storeProducts($dataProducts): JsonResponse
     {
         try {
             $product = new Product;
-            $product->create($request->all());
+            $product->name = $dataProducts['name'];
+            $product->price = $dataProducts['price'];
+            $product->delivery_days = $dataProducts['delivery_days'];
+            $product->reference = $dataProducts['reference'];
+            $product->save();
 
             return response()->json([
                 'message' => 'Produto cadastrado com sucesso!'
@@ -53,7 +57,6 @@ class ProductRepository
         return response()->json([
             'Product' => Product::find($id)
         ]);
-       // return Product::find($id);
     }
 
     public function updateProduct(Request $request, $id): JsonResponse

@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Product;
+use App\Http\Requests\ProductRequest;
 use App\Repositories\ProductRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -28,9 +28,11 @@ class ProductController extends Controller
      * @return JsonResponse
      */
 
-    public function store(Request $request): JsonResponse
+    public function store(ProductRequest $request): JsonResponse
     {
-        return (new ProductRepository())->storeProducts($request);
+        $dataProducts = $request->only('name', 'price', 'delivery_days', 'reference');
+
+        return (new ProductRepository())->storeProducts($dataProducts);
     }
 
     /**

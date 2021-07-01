@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Repositories\ProductRepository;
+use App\Http\Requests\SalesRequest;
 use App\Repositories\SaleRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Models\Sale;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Validator;
 
 class SaleController extends Controller
 {
@@ -28,9 +26,19 @@ class SaleController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return JsonResponse
      */
-    public function store(Request $request): JsonResponse
+    public function store(SalesRequest $request): JsonResponse
     {
-        return (new SaleRepository())->storeSale($request);
+        try {
+            $dataSales = $request->only('purchase_at', 'delivery_days', 'amount', 'products');
+
+            return (new SaleRepository())->storeSale($dataSales);
+
+        } catch(\Throwable $t) {
+            return response()->json([
+                'success' => false,
+                'error_message' =>  $t->getMessage()
+            ]);
+        }
     }
 
     /**
