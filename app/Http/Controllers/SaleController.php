@@ -2,96 +2,68 @@
 
 namespace App\Http\Controllers;
 
+use App\Repositories\ProductRepository;
+use App\Repositories\SaleRepository;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use App\Sale;
+use App\Models\Sale;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 
 class SaleController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return LengthAwarePaginator
      */
-    public function index(Request $request)
+    public function index(Request $request): LengthAwarePaginator
     {
-        if(isset($request->per_page))
-            $per_page = $request->per_page;
-        else 
-            $per_page = 20;
-        
-        return Sale::with('products:name,delivery_days')->paginate($per_page);
+        return (new SaleRepository())->getAllSales($request);
     }
 
     /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(),[
-            'purchase_at' => 'required|date|before:tomorrow',
-            'delivery_days' => 'required',
-            'amount' => 'required',
-            'products'=>'required',
-        ]);
-        
-        if ($validator->fails()) {
-          return response()->json(['errors'=>$validator->errors()], 422);
-        }
-    
-        $sale = new Sale;
-        $sale->purchase_at = Carbon::parse($request->purchase_at);
-        $sale->amount = $request->amount;
-        $sale->delivery_days = $request->delivery_days;
-        $sale->save();
-        $sale->products()->sync($request->products);
-        return Response()->json(['message'=>'Venda Concluida com sucesso!'], 201);
+        return (new SaleRepository())->storeSale($request);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param int $id
+     * @return Sale|Sale[]|\Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Builder[]|\Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model|\Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(int $id)
     {
-        return Sale::with('products:name,delivery_days')->find($id);
+        return (new SaleRepository())->showSale($id);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param \Illuminate\Http\Request $request
+     * @param int $id
+     * @return JsonResponse
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id): JsonResponse
     {
-        $sale = Sale::find($id);
-        $sale->purchase_at = Carbon::parse($request->purchase_at);
-        $sale->save();
-
-        $sale->products()->sync($request->products);
-
-        return Response()->json('Venda Alterada com sucesso!', 200);
+        return (new SaleRepository())->updateSale($request, $id);
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param int $id
+     * @return JsonResponse
      */
-    public function destroy($id)
+    public function destroy(int $id): JsonResponse
     {
-        $sale = Sale::find($id);
-        $sale->products()->detach();
-        $sale->delete();
-        return Response()->json('Venda Excluida com sucesso!', 200);
+        return (new SaleRepository())->destroySale($id);
     }
 }

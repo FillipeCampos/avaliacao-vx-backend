@@ -20,6 +20,6 @@ class Sale extends Model
 
     public function products()
     {
-        return $this->BelongsToMany('App\Product', 'sale_product')->withPivot( 'price', 'quantity', 'amount')->withTimestamps();
+        return $this->BelongsToMany('App\Models\Product', 'sale_product')->withPivot( 'price', 'quantity', 'amount')->withTimestamps();
     }
 }

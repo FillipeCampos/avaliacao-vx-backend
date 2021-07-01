@@ -1,80 +1,77 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Product;
+use App\Models\Product;
+use App\Repositories\ProductRepository;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        if(isset($request->product_name))
-            $query = strtoupper($request->product_name);
-            return Product::where('name','LIKE','%'.$query.'%')
-                        ->orWhere('reference','LIKE','%'.$query.'%')->get();
-
-        return Product::all();
+        try {
+            return (new ProductRepository())->getProducts($request);
+        } catch(\Throwable $t) {
+            return response()->json([
+                'success' => false,
+                'error_message' =>  $t->getMessage()
+            ]);
+        }
     }
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function store(Request $request)
+
+    public function store(Request $request): JsonResponse
     {
-        $product = new Product;
-        $product->create($request->all());
-        return Response()->json('Produto cadastrado!', 201);
+        return (new ProductRepository())->storeProducts($request);
     }
 
     /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param int $id
+     * @return JsonResponse
      */
-    public function show($id)
+    public function show(int $id): JsonResponse
     {
-        return Product::find($id);
-    }
-
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        $product = Product::find($id);
-        $product->name = $request->name;
-        $product->reference = $request->reference;
-        $product->price = $request->price;
-        $product->delivery_days = $request->delivery_days;
-        $product->save();
-        return Response()->json('Produto Atualizado!', 200);
-
+        try {
+            return (new ProductRepository())->showProduct($id);
+        } catch(\Throwable $t) {
+            return response()->json([
+                'success' => false,
+                'error_message' =>  'Produto não encontrado!'
+            ]);
+        }
     }
 
     /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @param int $id
+     * @return JsonResponse
      */
-    public function destroy($id)
+    public function update(Request $request, int $id): JsonResponse
     {
-        $product = Product::find($id);
-        $product->delete();
-        return Response()->json('Produto Excluido!', 200);
+        try {
+            return (new ProductRepository())->updateProduct($request, $id);
+        } catch(\Throwable $t) {
+            return response()->json([
+                'success' => false,
+                'error_message' =>  $t->getMessage()
+            ]);
+        }
+    }
 
+    /**
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function destroy(int $id): JsonResponse
+    {
+        return (new ProductRepository())->destroyProduct($id);
     }
 }
